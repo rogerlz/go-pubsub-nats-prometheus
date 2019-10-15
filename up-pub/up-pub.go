@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	"github.com/golang/snappy"
+	//"github.com/golang/snappy"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -161,7 +161,8 @@ func post(ctx context.Context, endpoint string, wreq *prompb.WriteRequest, subje
 		return errors.Wrap(err, "marshalling proto")
 	}
 
-	nc.Publish(subject, snappy.Encode(nil, buf))
+	//nc.Publish(subject, snappy.Encode(nil, buf))
+	nc.Publish(subject, buf)
 	nc.Flush()
 
 	if err := nc.LastError(); err != nil {
