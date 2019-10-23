@@ -104,12 +104,13 @@ func main() {
 			level.Info(logger).Log("msg", "nats connected", "server", opts.Endpoint)
 
 			if _, err := nc.QueueSubscribe(opts.Subject, "worker", func(msg *nats.Msg) {
-				decoded, err := decodeMessage(msg)
+				decoded, err := validateMessage(msg)
 				if err == nil {
 					level.Info(logger).Log("msg", "msg received", "content", decoded.String())
 
 					ctx, cancel := context.WithTimeout(bg, remoteWriterTimeout)
-					if err := postMessage(ctx, remotewriter, msg.Data); err != nil {
+					encoded := snappy.Encode(nil, msg.Data)
+					if err := postMessage(ctx, remotewriter, encoded); err != nil {
 						level.Error(logger).Log("msg", "failed to make request", "err", err)
 					}
 					cancel()
@@ -148,14 +149,13 @@ func main() {
 }
 
 
-func decodeMessage(m *nats.Msg) (prompb.WriteRequest, error) {
+func validateMessage(m *nats.Msg) (prompb.WriteRequest, error) {
 	var (
 		buf prompb.WriteRequest
 		err error
 	)
 
-	decoded, _ := snappy.Decode(nil, m.Data)
-	err = buf.Unmarshal(decoded)
+	err = buf.Unmarshal(m.Data)
 	if err != nil {
 		return buf, errors.Wrap(err, "unmarshalling proto")
 	}
