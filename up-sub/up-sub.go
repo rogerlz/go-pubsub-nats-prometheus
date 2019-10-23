@@ -177,7 +177,7 @@ func postMessage(ctx context.Context, remotewriter *url.URL, msg []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "making request")
 	}
-	if res.StatusCode != http.StatusOK {
+	if (res.StatusCode != http.StatusNoContent){
 		err = errors.New(res.Status)
 		return errors.Wrap(err, "non-200 status")
 	}
